@@ -1,0 +1,92 @@
+---
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: 3
+
+tasks:
+  shellcheck:
+    desc: Analyse all the bash and bats files with shellcheck
+    summary: |-
+      Run a static analysis on all the bash and bats files with shellcheck to ensure they are free of syntax errors and
+      potential issues before staging and commiting changes.
+    silent: true
+    cmds:
+      - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{end}}"
+      - task: shellcheck:bash
+      - task: shellcheck:bats
+      - task: shellcheck:helpers
+      - cmd: echo -e '\e[0;32mPassed\e[0m'
+
+  shellcheck:bash:
+    internal: true
+    desc: Analyse all the bash files with shellcheck
+    summary: |-
+      Run a static analysis on all the bash scripting files (both the executable scripts and included library files)
+      with shellcheck to ensure they are free of syntax errors and potential issues before staging and commiting
+      changes.
+    sources:
+      - scripts/bin/*
+      - scripts/lib/*.sh
+      - scripts/lib/**/*.sh
+    vars:
+      files:
+        sh: |-
+          find scripts/bin scripts/lib -type f \
+            \( -path 'scripts/bin/*' \) -or \
+            \( -path 'scripts/lib/*' -and -iname '*.sh' \) \
+            -print 2>/dev/null \
+            | sed 's|^\./||' | paste -sd' ' - \
+          || true
+    silent: true
+    deps:
+      - task: shfmt:bash
+    cmds:
+      - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{end}}"
+      - if: '{{ ne .files "" }}'
+        cmd: shellcheck --external-sources --source-path=scripts/lib --shell=bash {{ .files }}
+      - cmd: echo -e '\e[0;32mPassed\e[0m'
+
+  shellcheck:bats:
+    internal: true
+    desc: Analyse all the bats files for testing with shellcheck
+    summary: |-
+      Run a static analysis on all the bats files with shellcheck to ensure they are free of errors and potential issues
+      before testing.
+    sources:
+      - scripts/tests/*.bats
+    vars:
+      files:
+        sh: |-
+          find scripts/tests -type f -iname '*.bats' -print 2>/dev/null \
+            | sed 's|^\./||' | paste -sd' ' - \
+          || true
+    silent: true
+    deps:
+      - task: shfmt:bats
+    cmds:
+      - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{end}}"
+      - if: '{{ ne .files "" }}'
+        cmd: shellcheck --external-sources --source-path=scripts/lib --shell=bats {{ .files }}
+      - cmd: echo -e '\e[0;32mPassed\e[0m'
+
+  shellcheck:helpers:
+    internal: true
+    desc: Analyse all the helper scripts files for bats testing with shellcheck
+    summary: |-
+      Run a static analysis on all the bash helper scripts with shellcheck to ensure they are free of errors and
+      potential issues before testing with bats.
+    sources:
+      - scripts/tests/helpers/*.bash
+    vars:
+      files:
+        sh: |-
+          find scripts/tests/helpers -mindepth 1 -maxdepth 1 -type f -iname '*.bash' -print 2>/dev/null \
+            | sed 's|^\./||' | paste -sd' ' - \
+          || true
+    silent: true
+    deps:
+      - task: shfmt:helpers
+    cmds:
+      - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{end}}"
+      - if: '{{ ne .files "" }}'
+        cmd: shellcheck --external-sources --shell=bash {{ .files }}
+      - cmd: echo -e '\e[0;32mPassed\e[0m'

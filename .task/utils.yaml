@@ -1,0 +1,67 @@
+---
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: 3
+
+tasks:
+  utils:pre-checks:
+    internal: true
+    desc: Run pre-checks to ensure that all required tools are available
+    summary: >-
+      Run checks within the local environment to find out if the required tools exist, and if not exit from running any
+      further with an explanation
+    run: once
+    silent: true
+    deps:
+      - task: utils:pre-check:exec:hadolint
+      - task: utils:pre-check:exec:shellcheck
+      - task: utils:pre-check:exec:shfmt
+      - task: utils:pre-check:exec:bats
+      - task: utils:pre-check:exec:parallel
+      - task: utils:pre-check:exec:jq
+      - task: utils:pre-check:exec:prettier
+      - task: utils:pre-check:exec:realpath
+      - task: utils:pre-check:exec:yamllint
+      - task: utils:pre-check:exec:markdownlint
+      - task: utils:pre-check:exec:check-jsonschema
+      - task: utils:pre-check:exec:actionlint
+      - task: utils:pre-check:exec:zizmor
+      - task: utils:pre-check:exec:snyk
+
+  utils:pre-check:exec:*:
+    internal: true
+    desc: Check for a specific executable in $PATH
+    summary: >-
+      Check for a specific executable to ensure it's available within $PATH before running any further tasks and
+      commands.
+    label: '{{ trimSuffix ":*" .TASK }}:{{ default "{...}" (index .MATCH 0) }}'
+    prefix: '{{ trimSuffix ":*" .TASK }}:{{ default "{...}" (index .MATCH 0) }}'
+    run: once
+    silent: true
+    cmds:
+      - cmd: |-
+          if ! command -v '{{ index .MATCH 0 }}' >/dev/null 2>&1; then
+            echo -e '\e[1;31mFATAL: Cannot find {{ index .MATCH 0 }}\e[0m'
+            exit 1
+          fi
+    status:
+      # Set this file to bypass checks (only use if you know what you're doing)
+      - test -f {{ .ROOT_DIR }}/.skip-pre-checks
+
+  utils:pre-commit:
+    internal: true
+    desc: Enable the pre-commit hook for this repository
+    summary: >-
+      Enable the pre-commit hook in this repository to ensure that all the required checks are run before committing
+      staged changes back upstream
+    run: once
+    deps:
+      - task: utils:pre-check:exec:pre-commit
+    silent: true
+    cmds:
+      # Avoid outputting anything from this command
+      - cmd: pre-commit install >/dev/null 2>&1
+    generates:
+      - "{{ .ROOT_DIR }}/.git/hooks/pre-commit"
+    status:
+      - test -f '{{ .ROOT_DIR }}/.git/hooks/pre-commit'

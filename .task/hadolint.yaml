@@ -1,0 +1,19 @@
+---
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: 3
+
+tasks:
+  hadolint:
+    desc: Lint the Dockerfile with hadolint
+    summary: |-
+      Run hadolint against the Dockerfile to identify any potential misconfigurations and security issues within the
+      Dockerfile.
+    sources:
+      - Dockerfile
+      - .hadolint.yaml
+    silent: true
+    cmds:
+      - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{end}}"
+      - cmd: hadolint --config .hadolint.yaml --format gnu Dockerfile
+      - cmd: echo -e '\e[0;32mPassed\e[0m'

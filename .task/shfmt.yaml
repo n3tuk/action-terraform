@@ -1,0 +1,81 @@
+---
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: 3
+
+tasks:
+  shfmt:
+    desc: Lint all the bash and bats files with shfmt
+    summary: |-
+      Lint all the bash and bats files with shfmt to ensure they are formatted
+      correctly and consistently before staging and commiting changes.
+    silent: true
+    cmds:
+      - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{end}}"
+      - task: shfmt:bash
+      - task: shfmt:bats
+      - task: shfmt:helpers
+      - cmd: echo -e '\e[0;32mPassed\e[0m'
+
+  shfmt:bash:
+    internal: true
+    desc: Lint and reformat all the bash scripts with shfmt
+    summary: |-
+      Lint and reformat all the bash scrits with shfmt to ensure they are formatted correctly and consistently.
+    sources:
+      - scripts/bin/*
+      - scripts/lib/*.sh
+      - scripts/lib/**/*.sh
+    vars:
+      files:
+        sh: |-
+          find scripts/bin scripts/lib -type f \
+            \( -path 'scripts/bin/*' \) -or \
+            \( -path 'scripts/lib/*' -and -iname '*.sh' \) \
+            -print 2>/dev/null \
+            | sed 's|^\./||' | paste -sd' ' - \
+          || true
+    silent: true
+    cmds:
+      - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{end}}"
+      - if: '{{ ne .files "" }}'
+        cmd: shfmt --indent 2 --binary-next-line --case-indent --write --language-dialect bash --simplify {{ .files }}
+      - cmd: echo -e '\e[0;32mPassed\e[0m'
+
+  shfmt:bats:
+    internal: true
+    desc: Lint and reformat all the bats test files with shfmt
+    summary: |-
+      Lint and reformat all the bats scripts with shfmt to ensure they are formatted correctly and consistently.
+    sources:
+      - scripts/tests/*.bats
+    vars:
+      files:
+        sh: find scripts/tests -type f -iname '*.bats' -print 2>/dev/null | sed 's|^\./||' | paste -sd' ' - || true
+    silent: true
+    cmds:
+      - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{end}}"
+      - if: '{{ ne .files "" }}'
+        cmd: shfmt --indent 2 --binary-next-line --case-indent --write --language-dialect bats --simplify {{ .files }}
+      - cmd: echo -e '\e[0;32mPassed\e[0m'
+
+  shfmt:helpers:
+    internal: true
+    desc: Lint and reformat all the bats helper scripts files with shfmt
+    summary: |-
+      Lint and reformat all the bats helper scrits with shfmt to ensure they are
+      formatted correctly and consistently.
+    sources:
+      - scripts/tests/helpers/*.bash
+    vars:
+      files:
+        sh: |-
+          find scripts/tests/helpers -mindepth 1 -maxdepth 1 -type f -iname '*.bash' -print 2>/dev/null \
+            | sed 's|^\./||' | paste -sd' ' - \
+          || true
+    silent: true
+    cmds:
+      - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{end}}"
+      - if: '{{ ne .files "" }}'
+        cmd: shfmt --indent 2 --binary-next-line --case-indent --write --language-dialect bash --simplify {{ .files }}
+      - cmd: echo -e '\e[0;32mPassed\e[0m'

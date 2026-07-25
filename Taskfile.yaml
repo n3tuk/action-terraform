@@ -1,0 +1,173 @@
+---
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: 3
+output: prefixed
+interval: 3s
+
+set:
+  # Enforce the pipefail option in the Bash library to ensure the failure of any one step in the pipeline fails all.
+  - pipefail
+
+# NOTE: The `flatten` option is used when including other Taskfiles to ensure that the tasks are included at the
+#       top-level of this Taskfile. This is important to allow tasks in the included Taskfiles to be called directly
+#       from other imported Taskfiles, simplifying the overall structure of the Taskfiles and allowing for a more
+#       modular approach to task management.
+
+includes:
+  utils:
+    taskfile: .task/utils.yaml
+    flatten: true
+  bats:
+    taskfile: .task/bats.yaml
+    flatten: true
+  shellcheck:
+    taskfile: .task/shellcheck.yaml
+    flatten: true
+  shfmt:
+    taskfile: .task/shfmt.yaml
+    flatten: true
+  prettier:
+    taskfile: .task/prettier.yaml
+    flatten: true
+  yamllint:
+    taskfile: .task/yamllint.yaml
+    flatten: true
+  markdownlint:
+    taskfile: .task/markdownlint.yaml
+    flatten: true
+  check-jsonschema:
+    taskfile: .task/check-jsonschema.yaml
+    flatten: true
+  actionlint:
+    taskfile: .task/actionlint.yaml
+    flatten: true
+  zizmor:
+    taskfile: .task/zizmor.yaml
+    flatten: true
+  hadolint:
+    taskfile: .task/hadolint.yaml
+    flatten: true
+  dockerfile:
+    taskfile: .task/dockerfile.yaml
+    flatten: true
+  snyk:
+    taskfile: .task/snyk.yaml
+    flatten: true
+
+tasks:
+  default:
+    desc: Run the linting, formatting, analysis, testing and documentation tasks
+    summary: |-
+      Run the linting, formatting, analysis, testing, and documentation tasks for this GitHub Action, and associated
+      files. Use the following command for additional information on the steps involved:
+
+        $ task --summary develop
+    silent: true
+    cmds:
+      - task: develop
+
+  develop:
+    aliases:
+      - d
+      - dev
+    summary: |-
+      Run the linting, formatting, analysis, testing and documentation tasks for this GitHub Action, and associated
+      files.
+
+      The `develop` task is designed to run the core integration steps for this repository (and can do so continuously
+      when using the `--watch` option). It is designed to be run during development to ensure that any changes made to
+      the code are valid, correctly formatted, and do not introduce any security issues or misconfigurations.
+
+      Specifically, it will format and lint all supported files, run static code analysis tools, test the code, and keep
+      the documentation up-to-date, where it is automated.
+    deps:
+      - task: utils:pre-commit
+      - task: utils:pre-checks
+    silent: true
+    watch: true
+    cmds:
+      - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{ end }}"
+      - task: lint
+      - task: formatting
+      - task: test
+      - task: analyse
+      - cmd: echo -e '\e[0;32mCompleted\e[0m'
+
+  formatting:
+    aliases:
+      - f
+    desc: Format the selected files within this repository
+    summary: |-
+      Re-format the selected files within this repository to ensure they are consistent in their layout and usage,
+      including running all Markdown, YAML, JSON, and TOML files through Prettier.
+    silent: true
+    cmds:
+      - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{ end }}"
+      - task: prettier
+      - cmd: echo -e '\e[0;32mCompleted\e[0m'
+
+  lint:
+    aliases:
+      - l
+    desc: Lint selected files within this repository
+    summary: |-
+      Run linting checks across all Terraform, YAML, and Markdown files to find any potential issues or inconsistencies
+      within the code.
+    silent: true
+    cmds:
+      - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{ end }}"
+      - task: shfmt
+      - task: yamllint
+      - task: markdownlint
+      - task: hadolint
+      - cmd: echo -e '\e[0;32mCompleted\e[0m'
+
+  analyse:
+    desc: Run static analysis checks for this repository
+    summary: |-
+      Run static code analysis tools (i.e Snyk) against this GitHub Action, as well zizmor and actionlint against the
+      GitHub Dependabot configuration, all GitHub Workflow files, and the GitHub Action configuration, to identify any
+      potential security issues and misconfigurations within the code.
+    silent: true
+    cmds:
+      - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{ end }}"
+      - task: shellcheck
+      - task: actionlint
+      - task: zizmor
+      - task: snyk
+      - cmd: echo -e '\e[0;32mCompleted\e[0m'
+
+  test:
+    aliases:
+      - t
+    desc: Run unit and integration tests
+    summary: |-
+      Run the unit and integration tests for the GitHub Action scripts to ensure that they are working as expected and
+      to identify any potential issues using BATS.
+    silent: true
+    cmds:
+      - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{ end }}"
+      - task: bats
+      - cmd: echo -e '\e[0;32mCompleted\e[0m'
+
+  clean:
+    aliases:
+      - c
+    desc: Clean temporary files from the repository and configurations
+    summary: |-
+      Clean any temporary directories and files created by both this Taskfile,
+      and the tools and applications called from it, and from within the
+      configurations.
+
+      - Remove any cache files for Prettier to ensure that all files are
+        re-evaluated by Prettier for formatting and syntax validity;
+      - Remove all cache files for Task to ensure that all files are
+        re-evaluated by Task and all tasks are re-run from scratch.
+    run: once
+    silent: true
+    cmds:
+      - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{ end }}"
+      - cmd: rm -f .prettiercache
+      - cmd: rm -rf .task/checksum
+      - cmd: echo -e '\e[0;32mCompleted\e[0m'
