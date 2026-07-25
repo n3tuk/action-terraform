@@ -1,0 +1,10 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/hadolint/hadolint/master/contrib/hadolint.json
+
+failure-threshold: info
+format: tty
+
+ignored:
+  # Use SHELL with -o pipefail before RUN with a pipe in order to ensure that errors within the pipe are not masked.
+  # However, SHELL is not supported by OCI-compliant images.
+  - DL4006

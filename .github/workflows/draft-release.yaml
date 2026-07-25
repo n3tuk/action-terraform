@@ -1,0 +1,44 @@
+---
+# yaml-language-server: $schema=https://www.schemastore.org/github-workflow.json
+
+name: Draft Release
+run-name: >-
+  Building draft GitHub Release for ${{ github.sha }}
+
+concurrency:
+  group: ${{ github.repository }}:draft-release
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read # check out the repositories
+
+jobs:
+  draft-release:
+    name: Draft the Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create a release
+      pull-requests: read # read the pull requests to build release
+    outputs:
+      release-id: ${{ steps.release-drafter.outputs.release-id }}
+      release-url: ${{ steps.release-drafter.outputs.release-url }}
+      release-tag: ${{ steps.release-drafter.outputs.release-tag }}
+
+    steps:
+      - name: Checkout the Repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Draft the release
+        id: release-drafter
+        uses: release-drafter/release-drafter@693d20e7c1ce1a81d3a41962f85914253b518449 # v7.3.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          config-name: release-drafter.yaml
