@@ -1,0 +1,18 @@
+---
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: 3
+
+tasks:
+  action-docs:
+    desc: Generate the documentation from action.yaml to README.md
+    sources:
+      - README.md
+      - action.yaml
+    deps:
+      - task: actionlint
+    silent: true
+    cmds:
+      - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{ end }}"
+      - if: "[ -f action.yaml ]"
+        cmd: action-docs --no-banner --toc-level 3 --source action.yaml --update-readme
+      - cmd: echo -e '\e[0;32mCompleted\e[0m'

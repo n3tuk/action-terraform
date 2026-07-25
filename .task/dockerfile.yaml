@@ -1,0 +1,24 @@
+---
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: 3
+
+tasks:
+  dockerfile:build:
+    desc: Build the Dockerfile into a container image
+    summary: |-
+      Build the Dockerfile into a container image to ensure that the Dockerfile is correctly structured and can be built
+      without any issues.
+    sources:
+      - Dockerfile
+      - .dockerignore
+    deps:
+      - task: hadolint
+      - task: shfmt
+      - task: shellcheck
+    silent: true
+    cmds:
+      - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{end}}"
+      - cmd: echo -e 'Building Dockerfile...'
+      - cmd: docker build --quiet --tag action-platform-terraform:local-build .
+      - cmd: echo -e '\e[0;32mPassed\e[0m'

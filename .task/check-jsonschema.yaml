@@ -1,0 +1,100 @@
+---
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: 3
+
+tasks:
+  schema:
+    desc: Validate the schema of YAML files in the repository
+    summary: |-
+      Validate the layout and content of the YAML files in this repository using the JSON Schema files, including:
+
+      - Taskfiles (Taskfile.yaml, .taskfiles/*.yaml);
+      - GitHub Dependabot configuration (.github/dependabot.yaml);
+      - GitHub Workflows (.github/workflows/*.yaml);
+      - pre-commit Configuration (.pre-commit-config.yaml); and
+      - Mergify Configuration (.github/mergify.yml).
+    silent: true
+    cmds:
+      - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{end}}"
+      - task: schema:taskfiles
+      - task: schema:dependabot
+      - task: schema:workflows
+      - task: schema:action
+      - task: schema:pre-commit
+      - task: schema:mergify
+      - cmd: echo -e '\e[0;32mPassed\e[0m'
+
+  schema:taskfiles:
+    desc: Validate the schema of all Taskfiles
+    sources:
+      - Taskfile.yaml
+      - .task/*.yaml
+    silent: true
+    cmds:
+      - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{end}}"
+      - cmd: check-jsonschema --output-format text --builtin-schema vendor.taskfile Taskfile.yaml .task/*.yaml
+      - cmd: echo -e '\e[0;32mPassed\e[0m'
+
+  schema:dependabot:
+    desc: Validate the schema of the GitHub Dependabot configuration
+    sources:
+      - .github/dependabot.yaml
+    silent: true
+    cmds:
+      - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{end}}"
+      - if: "[ -f .github/dependabot.yaml ]"
+        cmd: check-jsonschema --output-format text --builtin-schema vendor.dependabot .github/dependabot.yaml
+      - cmd: echo -e '\e[0;32mPassed\e[0m'
+
+  schema:workflows:
+    desc: Validate the schema of the GitHub Workflows
+    sources:
+      - .github/workflows/*.yaml
+    vars:
+      files:
+        sh: |-
+          find .github/workflows -type f -iname '*.yaml' -print 2>/dev/null \
+            | sed 's|^\./||' | paste -sd' ' - \
+          || true
+    silent: true
+    cmds:
+      - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{end}}"
+      - if: '{{ ne .files "" }}'
+        cmd: check-jsonschema --output-format text --builtin-schema vendor.github-workflows {{ .files }}
+      - cmd: echo -e '\e[0;32mPassed\e[0m'
+
+  schema:action:
+    desc: Validate the schema of the GitHub Action configuration
+    sources:
+      - action.yaml
+    silent: true
+    cmds:
+      - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{end}}"
+      - if: test -f action.yaml
+        cmd: check-jsonschema --output-format text --builtin-schema vendor.github-actions action.yaml
+      - cmd: echo -e '\e[0;32mPassed\e[0m'
+
+  schema:pre-commit:
+    desc: Validate the schema of the pre-commit configuration
+    sources:
+      - .pre-commit-config.yaml
+    silent: true
+    cmds:
+      - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{end}}"
+      - if: "[ -f .pre-commit-config.yaml ]"
+        cmd: >-
+          check-jsonschema --output-format text --schemafile https://www.schemastore.org/pre-commit-config.json
+          .pre-commit-config.yaml
+      - cmd: echo -e '\e[0;32mPassed\e[0m'
+
+  schema:mergify:
+    desc: Validate the schema of the Mergify configuration
+    sources:
+      - .github/mergify.yml
+    silent: true
+    cmds:
+      - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{end}}"
+      - if: "[ -f .github/mergify.yml ]"
+        cmd: check-jsonschema --output-format text --builtin-schema vendor.mergify .github/mergify.yml
+      - cmd: echo -e '\e[0;32mPassed\e[0m'

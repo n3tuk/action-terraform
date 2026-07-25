@@ -1,0 +1,29 @@
+---
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: 3
+
+tasks:
+  bats:
+    desc: Run all unit and integration tests for bash scripts
+    summary: |-
+      Run the full BATS test suite for the validate, plan, and apply scripts, validating the init, validate, plan, and
+      apply operations of this GitHub Action, which includes all library function unit tests and template rendering
+      tests.
+
+      This task requires that bats-core ≥ 1.10.0 is installed, alongside the bats-support, bats-assert, and bats-file
+      libraries, on the development machine and available within the system `PATH` (for bats-core) and `BATS_LIB_PATH`
+      (for bats-support, bats-assert, and bats-fire).
+    sources:
+      - scripts/tests/*.bats
+      - scripts/tests/helpers/*.bash
+      - scripts/bin/*
+      - scripts/lib/*.sh
+      - scripts/templates/*.md.t
+    silent: true
+    deps:
+      - task: shellcheck
+    cmds:
+      - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{end}}"
+      - cmd: bats --recursive --formatter tap13 --jobs 20 scripts/tests
+      - cmd: echo -e '{{ .cg }}Passed{{ .cc }}'
