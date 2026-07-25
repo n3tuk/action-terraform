@@ -1,0 +1,6 @@
+# Ignore cache files for Prettier linting and formatting checks
+.prettiercache
+
+# Ignore Taskfile processing directory and files
+.skip-pre-checks
+.task/checksum
