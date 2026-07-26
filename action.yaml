@@ -1,0 +1,38 @@
+---
+# yaml-language-server: $schema=https://www.schemastore.org/github-action.json
+
+name: terraform
+description: >-
+  A GitHub Action to help manage the lifecycle of Terraform configurations, including the initialisation, validation,
+  planning, and application of the planned changes to infrastructure across multiple providers.
+
+inputs:
+  action:
+    description: >-
+      The action to perform through this Action, which can be one of the following: `validate`, `plan`, or `apply`.
+    required: true
+    default: validate
+  configuration:
+    description: >-
+      The path to the Terraform configuration to target for the specified action.
+    required: true
+    default: terraform
+  module:
+    description: >-
+      Set to `true` when the target configuration is a Terraform module. Module validation skips the module root and
+      instead initialises and validates Terraform example configurations found beneath `examples/`.
+    required: false
+    default: "false"
+
+runs:
+  using: docker
+  image: Dockerfile
+  entrypoint: /data/scripts/bin/run
+  env:
+    TF_ACTION: ${{ inputs.action }}
+    TF_CONFIGURATION: ${{ inputs.configuration }}
+    TF_MODULE: ${{ inputs.module }}
+
+branding:
+  icon: terminal
+  color: blue

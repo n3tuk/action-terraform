@@ -14,8 +14,8 @@ on:
     branches:
       - main
 
-permissions:
-  contents: read # check out the repositories
+# No permissions by default
+permissions: {}
 
 jobs:
   draft-release:

@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+# vim:set ft=bash:
+
+set -euo pipefail
+
+LIB_DIR=$(realpath "$(dirname "${0}")/../lib")
+TMPL_DIR=$(realpath "$(dirname "${0}")/../templates")
+export LIB_DIR TMPL_DIR
+
+# shellcheck source=../lib/common.sh
+source "${LIB_DIR}/common.sh"
+
+# Usage: ::command::
+#
+# This is a script to, through Taskfile, initialise, validate, generate an execution plan for, and/or apply the
+# execution plan for, a Terraform configuration, or when the configuration is a Terraform module, to validate the
+# example configurations beneath the module's examples/ directory as the means to verify the module.
+#
+# Environment variables:
+#
+#   TF_ACTION           - The action to perform on the Terraform configuration (one of: validate, plan, apply).
+#   TF_CONFIGURATION    - The path to the Terraform configuration being planned.
+#   TF_MODULE           - Set to "true" when TF_CONFIGURATION targets a module (required for validate TF_ACTION),
+#   GITHUB_WORKSPACE    - The path on the runner to the root of the repository.
+#   GITHUB_REPOSITORY   - Set by the GitHub Workflow, this is the owner/name of the repository this workflow is running
+#                         under.
+#   GITHUB_HEAD_REF     - The short reference name of the branch or tag that triggered the workflow run.
+#   GITHUB_STEP_SUMMARY - The path on the runner to the file that contains job summaries from workflow commands.
+#
+# Returns 1 if an environment variable or command is missing, if no example configurations can be found for a module, or
+#   if Terraform failed to initilise, validate, plan, or apply, the requested configuration, depending on the selected
+#   TF_ACTION terraform action to perform.
+# Returns 0 if the configuration was successfully validated
+
+check:commands \
+  task \
+  tfswitch \
+  terraform \
+  gomplate \
+  jq
+
+# As Terraform is intended to be used in automation through this GitHub Action, we will set the TF_IN_AUTOMATION
+# environment variable to ensure Terraform outputs less during normal operation (such what is the next command to run).
+TF_IN_AUTOMATION=true
+
+# For Taskfile, we want to prepare task to work more effectively inside this GitHub Action, so we will disable
+# colourisation and group the outputs using GitHub formatting.
+NO_COLOR=1
+TASK_OUTPUT="group"
+TASK_OUTPUT_GROUP_BEGIN="::group::{{ .TASK }}"
+TASK_OUTPUT_GROUP_END="::endgroup::"
+TASK_OUTPUT_GROUP_ERROR_ONLY="false"
+
+# Export all these variables to allow Taskfile and Terraform to use them
+export TF_IN_AUTOMATION NO_COLOR TASK_OUTPUT TASK_OUTPUT_GROUP_BEGIN TASK_OUTPUT_GROUP_END TASK_OUTPUT_GROUP_ERROR_ONLY
+
+check:variables \
+  TF_ACTION \
+  TF_CONFIGURATION \
+  TF_IN_AUTOMATION \
+  NO_COLOR \
+  TASK_OUTPUT \
+  TASK_OUTPUT_GROUP_BEGIN \
+  TASK_OUTPUT_GROUP_END \
+  TASK_OUTPUT_GROUP_ERROR_ONLY \
+  GITHUB_WORKSPACE \
+  GITHUB_REPOSITORY \
+  GITHUB_HEAD_REF \
+  GITHUB_STEP_SUMMARY
+
+# Prepare a clean name and path from the TF_CONFIGURATION variable for use in the rest of the script, and export those
+# variables for use in templating
+TF_NAME=$(check:name "${TF_CONFIGURATION}")
+TF_PATH=$(check:path "${TF_CONFIGURATION}")
+export TF_NAME TF_PATH
+
+output:variables \
+  TF_NAME \
+  TF_PATH
+
+if [[ -d "${GITHUB_WORKSPACE}" ]]; then
+  cd "${GITHUB_WORKSPACE}" || exit 1
+fi
+
+case "${TF_ACTION}" in
+validate)
+  check:variable TF_MODULE
+  validate
+  ;;
+plan)
+  plan
+  ;;
+apply)
+  apply
+  ;;
+*)
+  output:error "terraform" "terraform ${TF_ACTION} is not a valid action. Valid actions are: validate, plan, apply."
+  exit 1
+  ;;
+esac

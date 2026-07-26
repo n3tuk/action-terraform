@@ -25,5 +25,5 @@ tasks:
       - task: shellcheck
     cmds:
       - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{end}}"
-      - cmd: bats --recursive --formatter tap13 --jobs 20 scripts/tests
+      - cmd: bats --recursive --formatter tap13 --jobs 20 --allow-empty-suite scripts/tests
       - cmd: echo -e '{{ .cg }}Passed{{ .cc }}'
