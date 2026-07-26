@@ -53,6 +53,5 @@ tasks:
     silent: true
     cmds:
       - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{ end }}"
-      - if: '{{ ne .files "" }}'
-        cmd: prettier --write --cache --cache-location .prettiercache --cache-strategy content {{ .files }}
+      - cmd: prettier --write --cache --cache-location .prettiercache --cache-strategy content {{ .files }}
       - cmd: echo -e '\e[0;32mPassed\e[0m'

@@ -2,6 +2,7 @@
 # yaml-language-server: $schema=https://taskfile.dev/schema.json
 
 version: 3
+
 output: prefixed
 interval: 3s
 
@@ -57,7 +58,7 @@ includes:
 
 tasks:
   default:
-    desc: Run the linting, formatting, analysis, testing and documentation tasks
+    desc: Run the linting, formatting, analysis, testing, and documentation tasks
     summary: |-
       Run the linting, formatting, analysis, testing, and documentation tasks for this GitHub Action, and associated
       files. Use the following command for additional information on the steps involved:
@@ -71,8 +72,9 @@ tasks:
     aliases:
       - d
       - dev
+    desc: Run the linting, formatting, analysis, testing, and documentation tasks
     summary: |-
-      Run the linting, formatting, analysis, testing and documentation tasks for this GitHub Action, and associated
+      Run the linting, formatting, analysis, testing, and documentation tasks for this GitHub Action, and associated
       files.
 
       The `develop` task is designed to run the core integration steps for this repository (and can do so continuously
@@ -112,8 +114,8 @@ tasks:
       - l
     desc: Lint selected files within this repository
     summary: |-
-      Run linting checks across all Terraform, YAML, and Markdown files to find any potential issues or inconsistencies
-      within the code.
+      Run linting checks across all scripts, Dockerfiles, YAML, and Markdown files to find any potential issues or
+      inconsistencies within the code.
     silent: true
     cmds:
       - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{ end }}"
@@ -121,6 +123,7 @@ tasks:
       - task: yamllint
       - task: markdownlint
       - task: hadolint
+      - task: check-jsonschema
       - cmd: echo -e '\e[0;32mCompleted\e[0m'
 
   analyse:
@@ -156,14 +159,8 @@ tasks:
       - c
     desc: Clean temporary files from the repository and configurations
     summary: |-
-      Clean any temporary directories and files created by both this Taskfile,
-      and the tools and applications called from it, and from within the
-      configurations.
-
-      - Remove any cache files for Prettier to ensure that all files are
-        re-evaluated by Prettier for formatting and syntax validity;
-      - Remove all cache files for Task to ensure that all files are
-        re-evaluated by Task and all tasks are re-run from scratch.
+      Clean any temporary directories and files created by both this Taskfile, and the tools and applications called
+      from it, and from within the configurations.
     run: once
     silent: true
     cmds:

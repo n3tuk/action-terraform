@@ -35,7 +35,7 @@ repos:
       - id: prettier
         name: Lint selected files with Prettier
         args:
-          - --config=.prettier.yaml
+          - --config=.prettierrc.yaml
         additional_dependencies:
           - prettier@3.9.6
         types_or:

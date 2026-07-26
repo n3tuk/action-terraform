@@ -60,7 +60,7 @@ tasks:
     silent: true
     cmds:
       # Avoid outputting anything from this command
-      - cmd: pre-commit install >/dev/null 2>&1
+      - cmd: pre-commit install --ignore-missing-config >/dev/null 2>&1
     generates:
       - "{{ .ROOT_DIR }}/.git/hooks/pre-commit"
     status:
