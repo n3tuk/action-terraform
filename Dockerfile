@@ -93,7 +93,7 @@ RUN apk del --no-cache curl
 # NOTE: All GitHub Actions are expected to run as the root user during normal operation, so creating and using non-root
 #       users can risk breaking the actions, especially where files or directories are created and owned by the root
 #       user. Therefore, we will not create a non-root user in this image.
-WORKDIR /data
+WORKDIR /action
 
-COPY scripts /data/scripts
-ENTRYPOINT ["/data/scripts/bin/run"]
+COPY scripts /action
+ENTRYPOINT ["/action/bin/run"]
