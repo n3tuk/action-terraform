@@ -148,3 +148,11 @@ Helper modules are in `scripts/tests/helpers/`:
 | :------------------------------------ | :--------------------------------------------- |
 | `scripts/tests/helpers/mock.bash`     | `terraform` stub and environment setup helpers |
 | `scripts/tests/helpers/fixtures.bash` | Terraform log output fixtures for use in tests |
+
+## License
+
+This repository and project is licensed under the MIT License. See the [`LICENSE`](LICENSE) file for details.
+
+## Authors
+
+- Jonathan Wright [`@jonathanio`](https://github.com/jonathanio) <jon@than.io>

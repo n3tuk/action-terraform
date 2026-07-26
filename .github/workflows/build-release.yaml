@@ -14,8 +14,8 @@ on:
     tags:
       - v*.*.*
 
-permissions:
-  contents: read # check out the repositories
+# No permissions by default
+permissions: {}
 
 defaults:
   run:

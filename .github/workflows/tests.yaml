@@ -1,0 +1,133 @@
+---
+# yaml-language-server: $schema=https://www.schemastore.org/github-workflow.json
+
+name: Tests
+run-name: >-
+  Run BATS Tests for ${{ github.event.pull_request.title || github.sha }}
+
+concurrency:
+  group: ${{ github.repository }}:tests:${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+
+# No permissions by default
+permissions: {}
+
+defaults:
+  run:
+    # Error handling and pipefail must be explicitly set via the default shell
+    #   https://github.com/actions/runner/issues/353#issuecomment-1067227665
+    shell: bash --noprofile --norc -eo pipefail {0}
+
+jobs:
+  scripts:
+    name: BATS
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # check out the repository
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Install jq
+        run: sudo apt-get install --yes --no-install-recommends jq
+
+      - name: Install bats-core
+        env:
+          BATS_URL_PREFIX: https://github.com/bats-core
+          BATS_VERSION: 1.11.1
+        run: |
+          # curl github.com/bats-core/bats-core ...
+          curl --silent --location --fail \
+            "${BATS_URL_PREFIX}/bats-core/archive/refs/tags/v${BATS_VERSION}.tar.gz" \
+            --output bats-core.tar.gz
+          tar xzf bats-core.tar.gz
+          sudo bash "bats-core-${BATS_VERSION}/install.sh" /usr/local
+          rm -rf "bats-core-${BATS_VERSION}" bats-core.tar.gz
+
+      - name: Install bats helper libraries
+        env:
+          BATS_URL_PREFIX: https://github.com/bats-core
+          BATS_SUPPORT_VERSION: 0.3.0
+          BATS_ASSERT_VERSION: 2.1.0
+          BATS_FILE_VERSION: 0.4.0
+        run: |
+          # curl github.com/bats-core/bats-{support,assert,file} ...
+          BATS_LIB_DIR=/usr/lib/bats
+          sudo mkdir -p "${BATS_LIB_DIR}"
+
+          # bats-support
+          curl --silent --location --fail \
+            "${BATS_URL_PREFIX}/bats-support/archive/refs/tags/v${BATS_SUPPORT_VERSION}.tar.gz" \
+            --output bats-support.tar.gz
+          tar xzf bats-support.tar.gz
+          sudo mv "bats-support-${BATS_SUPPORT_VERSION}" "${BATS_LIB_DIR}/bats-support"
+          rm bats-support.tar.gz
+
+          # bats-assert
+          curl --silent --location --fail \
+            "${BATS_URL_PREFIX}/bats-assert/archive/refs/tags/v${BATS_ASSERT_VERSION}.tar.gz" \
+            --output bats-assert.tar.gz
+          tar xzf bats-assert.tar.gz
+          sudo mv "bats-assert-${BATS_ASSERT_VERSION}" "${BATS_LIB_DIR}/bats-assert"
+          rm bats-assert.tar.gz
+
+          # bats-file
+          curl --silent --location --fail \
+            "${BATS_URL_PREFIX}/bats-file/archive/refs/tags/v${BATS_FILE_VERSION}.tar.gz" \
+            --output bats-file.tar.gz
+          tar xzf bats-file.tar.gz
+          sudo mv "bats-file-${BATS_FILE_VERSION}" "${BATS_LIB_DIR}/bats-file"
+          rm bats-file.tar.gz
+
+      - name: Install gomplate
+        env:
+          GOMPLATE_URL_PREFIX: https://github.com/hairyhenderson/gomplate/releases/download
+          GOMPLATE_VERSION: 5.2.0
+        run: |
+          # curl github.com/hairyhenderson/gomplate ...
+          curl --silent --remote-name --location \
+            "${GOMPLATE_URL_PREFIX}/v${GOMPLATE_VERSION}/gomplate_linux-amd64"
+          sudo mv gomplate_linux-amd64 /usr/local/bin/gomplate
+          sudo chmod +x /usr/local/bin/gomplate
+
+      - name: Install hcledit
+        env:
+          HCLEDIT_URL_PREFIX: https://github.com/minamijoyo/hcledit/releases/download
+          HCLEDIT_VERSION: 0.2.9
+        run: |
+          # curl github.com/minamijoyo/hcledit ...
+          curl --silent --location --fail \
+            "${HCLEDIT_URL_PREFIX}/v${HCLEDIT_VERSION}/hcledit_${HCLEDIT_VERSION}_linux_amd64.tar.gz" \
+            --output hcledit.tar.gz
+          tar xzf hcledit.tar.gz hcledit
+          sudo mv hcledit /usr/local/bin/hcledit
+          rm hcledit.tar.gz
+
+      - name: Run BATS tests
+        run: |-
+          # bats --recursive scripts/tests
+          bats --recursive --formatter junit scripts/tests | tee report.xml
+
+      - name: Process JUnit Test Results
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        if: ${{ !cancelled() }}
+        with:
+          name: BATS Tests
+          path: report.xml
+          reporter: java-junit
+          collapsed: never
+          max-annotations: 50
