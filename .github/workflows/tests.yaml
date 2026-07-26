@@ -43,7 +43,10 @@ jobs:
           persist-credentials: false
 
       - name: Install jq
-        run: sudo apt-get install --yes --no-install-recommends jq
+        run: |-
+          # sudo apt install jq
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends jq
 
       - name: Install bats-core
         env:
@@ -107,7 +110,7 @@ jobs:
       - name: Install hcledit
         env:
           HCLEDIT_URL_PREFIX: https://github.com/minamijoyo/hcledit/releases/download
-          HCLEDIT_VERSION: 0.2.9
+          HCLEDIT_VERSION: 0.2.18
         run: |
           # curl github.com/minamijoyo/hcledit ...
           curl --silent --location --fail \

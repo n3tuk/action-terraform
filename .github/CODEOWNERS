@@ -1,0 +1,5 @@
+* @jonathanio
+
+# Order is important within the CODEOWNERS file. The last matching pattern takes the most precedence. Therefore, take
+# care when adding new patterns to the file, as they may override existing patterns (e.g. adding more general patterns
+# at the bottom of the file may override more specific patterns that are defined above them).
