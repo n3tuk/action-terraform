@@ -37,7 +37,7 @@ repos:
         args:
           - --config=.prettier.yaml
         additional_dependencies:
-          - prettier@3.8.4
+          - prettier@3.9.6
         types_or:
           - markdown
           - json
