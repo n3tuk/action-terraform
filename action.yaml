@@ -25,13 +25,21 @@ inputs:
     default: "false"
 
 runs:
-  using: docker
-  image: Dockerfile
-  entrypoint: /data/scripts/bin/run
-  env:
-    TF_ACTION: ${{ inputs.action }}
-    TF_CONFIGURATION: ${{ inputs.configuration }}
-    TF_MODULE: ${{ inputs.module }}
+  using: composite
+  steps:
+    - name: Extract the GitHub Action Reference
+      id: extract
+      shell: bash --noprofile --norc -eo pipefail {0}
+      run: |-
+        # echo "reference=..." >> ${GITHUB_OUTPUT}
+        echo "reference=$(echo ${GITHUB_ACTION_REF} | sed 's/refs\/\(heads|tags\)\///g' >> "${GITHUB_OUTPUT}"
+
+    - name: Run the Terraform Action
+      uses: docker://ghcr.io/n3tuk/terraform-action:${{ steps.extract.outputs.reference }}
+      env:
+        TF_ACTION: ${{ inputs.action }}
+        TF_CONFIGURATION: ${{ inputs.configuration }}
+        TF_MODULE: ${{ inputs.module }}
 
 branding:
   icon: terminal

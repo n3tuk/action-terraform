@@ -11,9 +11,10 @@ tasks:
       incompatibilities.
     sources:
       - .github/workflows/*.yaml
+      - .github/actionlint.yaml
     silent: true
     cmds:
       - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{ end }}"
       - if: ls .github/workflows/*.yaml >/dev/null 2>&1
-        cmd: actionlint -config-file .actionlint.yaml -no-color .github/workflows/*.yaml
+        cmd: actionlint -no-color .github/workflows/*.yaml
       - cmd: echo -e '\e[0;32mPassed\e[0m'
