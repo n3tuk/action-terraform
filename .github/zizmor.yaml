@@ -1,10 +1,4 @@
 ---
 # yaml-language-server $schema=https://raw.githubusercontent.com/woodruffw/zizmor/main/support/zizmor.schema.json
 
-rules:
-  dependabot-cooldown:
-    config:
-      # The default of seven days can sometimes prevent regular updates of resources which themselves update on a
-      # roughly weekly cycle (or less). Therefore, as this is not a mission-critical system, we'll lower the minimum
-      # limit to three days to give dependencies a stronger chance of regular updates, but with some hold-off.
-      days: 3
+rules: {}

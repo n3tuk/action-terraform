@@ -5,12 +5,13 @@ version: 3
 
 tasks:
   check-jsonschema:
-    desc: Validate the schema of YAML files in the repository
+    desc: Validate the schema of YAML and JSON files in the repository
     summary: |-
-      Validate the layout and content of the YAML files in this repository using the JSON Schema files, including:
+      Validate the layout and content of the YAML and JSON files in this repository using the JSON Schema files,
+      including:
 
-      - Taskfiles (Taskfile.yaml, .taskfiles/*.yaml);
-      - GitHub Dependabot configuration (.github/dependabot.yaml);
+      - Taskfiles (Taskfile.yaml, .task/*.yaml);
+      - Renovate configuration (.github/renovate.json);
       - GitHub Workflows (.github/workflows/*.yaml);
       - pre-commit Configuration (.pre-commit-config.yaml); and
       - Mergify Configuration (.github/mergify.yml).
@@ -18,7 +19,7 @@ tasks:
     cmds:
       - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{end}}"
       - task: check-jsonschema:taskfiles
-      - task: check-jsonschema:dependabot
+      - task: check-jsonschema:renovate
       - task: check-jsonschema:workflows
       - task: check-jsonschema:action
       - task: check-jsonschema:pre-commit
@@ -36,15 +37,15 @@ tasks:
       - cmd: check-jsonschema --output-format text --builtin-schema vendor.taskfile Taskfile.yaml .task/*.yaml
       - cmd: echo -e '\e[0;32mPassed\e[0m'
 
-  check-jsonschema:dependabot:
-    desc: Validate the schema of the GitHub Dependabot configuration
+  check-jsonschema:renovate:
+    desc: Validate the schema of the Renovate configuration
     sources:
-      - .github/dependabot.yaml
+      - .github/renovate.json
     silent: true
     cmds:
       - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{end}}"
-      - if: "[ -f .github/dependabot.yaml ]"
-        cmd: check-jsonschema --output-format text --builtin-schema vendor.dependabot .github/dependabot.yaml
+      - if: "[ -f .github/renovate.json ]"
+        cmd: check-jsonschema --output-format text --builtin-schema vendor.renovate .github/renovate.json
       - cmd: echo -e '\e[0;32mPassed\e[0m'
 
   check-jsonschema:workflows:
