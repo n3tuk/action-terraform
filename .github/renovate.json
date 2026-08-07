@@ -18,19 +18,19 @@
   "packageRules": [
     {
       "matchManagers": ["pre-commit"],
-      "schedule": ["0 18 * * *"],
+      "schedule": ["* 18 * * *"],
       "commitMessagePrefix": "chore(pre-commit): ",
       "commitMessageAction": "bump"
     },
     {
       "matchManagers": ["github-actions"],
-      "schedule": ["30 18 * * *"],
+      "schedule": ["* 19 * * *"],
       "commitMessagePrefix": "chore(actions): ",
       "commitMessageAction": "bump"
     },
     {
       "matchManagers": ["dockerfile"],
-      "schedule": ["0 19 * * *"],
+      "schedule": ["* 20 * * *"],
       "commitMessagePrefix": "chore(dockerfile): ",
       "commitMessageAction": "bump"
     },
