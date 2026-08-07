@@ -12,15 +12,13 @@
   "vulnerabilityAlerts": {
     "enabled": true
   },
-  "registryAliases": {
-    "dhi.io": "dhi.io"
-  },
   "packageRules": [
     {
       "matchManagers": ["pre-commit"],
       "schedule": ["* 18 * * *"],
       "commitMessagePrefix": "chore(pre-commit): ",
-      "commitMessageAction": "bump"
+      "commitMessageAction": "bump",
+      "labels": ["type/dependencies", "release/skip"]
     },
     {
       "matchManagers": ["github-actions"],
