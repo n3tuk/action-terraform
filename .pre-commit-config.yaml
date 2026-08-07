@@ -65,7 +65,7 @@ repos:
           - .yamllint.yaml
 
   - repo: https://github.com/hadolint/hadolint.git
-    rev: v2.15.0
+    rev: v2.15.1
     hooks:
       - name: Check Dockerfiles for best practices with hadolint
         id: hadolint
