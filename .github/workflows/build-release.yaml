@@ -3,7 +3,7 @@
 
 name: Build Release
 run-name: >-
-  Updating GitHub Release tags for ${{ github.ref_name }}
+  Updating GitHub Release tags for ${{ github.ref_name || github.sha }}
 
 concurrency:
   group: ${{ github.repository }}:build-release

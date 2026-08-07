@@ -92,6 +92,7 @@ tasks:
       - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{ end }}"
       - task: lint
       - task: formatting
+      - task: validate
       - task: test
       - task: analyse
       - cmd: echo -e '\e[0;32mCompleted\e[0m'
@@ -123,6 +124,16 @@ tasks:
       - task: yamllint
       - task: markdownlint
       - task: hadolint
+      - cmd: echo -e '\e[0;32mCompleted\e[0m'
+
+  validate:
+    desc: Validate selected files within this repository
+    summary: |-
+      Run validation checks on selected YAML files, including GitHub Workflows, GitHub Actions, Renovate, Mergify,
+      Taskfiles, and the pre-commit configuration.
+    silent: true
+    cmds:
+      - defer: "{{ if .EXIT_CODE }}echo -e '\e[1;31mFailed\e[0m'{{ end }}"
       - task: check-jsonschema
       - cmd: echo -e '\e[0;32mCompleted\e[0m'
 

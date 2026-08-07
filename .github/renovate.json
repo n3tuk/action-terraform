@@ -1,7 +1,11 @@
 {
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
   "timezone": "Europe/London",
   "enabledManagers": ["pre-commit", "github-actions", "dockerfile"],
+  "pre-commit": {
+    "enabled": true
+  },
   "draftPR": true,
   "labels": ["type/dependencies", "release/chore"],
   "minimumReleaseAge": "3 days",
