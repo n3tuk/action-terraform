@@ -79,10 +79,14 @@ repos:
     hooks:
       - name: Check the Taskfiles for correctness
         id: check-taskfile
-      - name: Check Renovate configuration for correctness
+      - name: Check the Renovate configuration for correctness
         id: check-renovate
       - name: Check GitHub Workflows for correctness
         id: check-github-workflows
+      - name: Check GitHub Actions for correctness
+        id: check-github-actions
+      - name: Check the Mergify configuration for correctness
+        id: check-mergify
 
   # Static Analysis
 
