@@ -98,11 +98,11 @@ categories:
     when:
       label: release/skip
 
-# Exclude dependabot from the contributors list as this is a bot account for automated dependency updates, and shouldn't
-# be making significant changes.
+# Exclude automated dependency and documentation bots from the contributors list, as they should not be making
+# significant changes.
 exclude-contributors:
-  - dependabot
-  - dependabot[bot]
+  - renovate
+  - renovate[bot]
   - n3tuk-terraform-docs
   - n3tuk-terraform-docs[bot]
 

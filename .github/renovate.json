@@ -1,0 +1,50 @@
+{
+  "extends": ["config:recommended"],
+  "timezone": "Europe/London",
+  "enabledManagers": ["pre-commit", "github-actions", "dockerfile"],
+  "draftPR": true,
+  "labels": ["type/dependencies", "release/chore"],
+  "minimumReleaseAge": "3 days",
+  "minimumReleaseAgeBehaviour": "timestamp-optional",
+  "prCreation": "not-pending",
+  "internalChecksFilter": "strict",
+  "dependencyDashboard": true,
+  "vulnerabilityAlerts": {
+    "enabled": true
+  },
+  "registryAliases": {
+    "dhi.io": "dhi.io"
+  },
+  "packageRules": [
+    {
+      "matchManagers": ["pre-commit"],
+      "schedule": ["0 18 * * *"],
+      "commitMessagePrefix": "chore(pre-commit): ",
+      "commitMessageAction": "bump"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "schedule": ["30 18 * * *"],
+      "commitMessagePrefix": "chore(actions): ",
+      "commitMessageAction": "bump"
+    },
+    {
+      "matchManagers": ["dockerfile"],
+      "schedule": ["0 19 * * *"],
+      "commitMessagePrefix": "chore(dockerfile): ",
+      "commitMessageAction": "bump"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["n3tuk/*"],
+      "minimumReleaseAge": null,
+      "prCreation": "immediate"
+    },
+    {
+      "matchManagers": ["pre-commit"],
+      "matchPackageNames": ["pre-commit/mirrors-prettier"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    }
+  ]
+}
